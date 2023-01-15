@@ -1,0 +1,49 @@
+#!/bin/bash +x
+
+# coderun - bash script to compile and run programs easily
+
+SHORT_ARGS="f:,e:,m:,C:,c:,h"
+LONG_ARGS="file:,file-extension:,mode:,config:,compiler-flags:,help"
+OPTIONS=$(getopt --alternative --name coderun --options $SHORT_ARGS --longoptions $LONG_ARGS -- "$@")
+
+eval set -- "$OPTIONS" # sets args as OPTIONS
+unset OPTIONS
+
+while true
+do
+	case "$1" in
+		-f | --file)
+			echo file is "$2"
+			shift; shift
+			;;
+		-e | --file-extension)
+			echo extension is "$2"
+			shift; shift
+			;;
+		-m | --mode)
+			echo mode is "$2"
+			shift; shift
+			;;
+		-C | --config)
+			echo config is "$2"
+			shift; shift
+			;;
+		-c | --compiler-flags)
+			echo flags are "$2"
+			shift; shift
+			;;
+		-h | --help)
+			echo help
+			break
+			;;
+		--)
+			break
+			;;
+		*)
+			echo Error! Unknown flag. See help for valid flags
+			break
+			;;
+	esac
+done
+
+echo done
