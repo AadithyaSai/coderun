@@ -1,10 +1,20 @@
-#!/bin/bash +x
+#!/bin/bash
 
 # coderun - bash script to compile and run programs easily
 
-SHORT_ARGS="f:,e:,m:,C:,c:,h"
-LONG_ARGS="file:,file-extension:,mode:,config:,compiler-flags:,help"
-OPTIONS=$(getopt --alternative --name coderun --options $SHORT_ARGS --longoptions $LONG_ARGS -- "$@")
+usage()
+{
+	echo "Usage: coderun [options] FILE"
+	exit 2
+}
+
+SHORT_ARGS="e:,m:,C:,c:,h,a:"
+LONG_ARGS="file-extension:,mode:,config:,compiler-flags:,help,args:"
+
+if ! OPTIONS=$(getopt --alternative --name coderun --options $SHORT_ARGS --longoptions $LONG_ARGS -- "$@")
+then 
+	exit 1
+fi
 
 eval set -- "$OPTIONS" # sets args as OPTIONS
 unset OPTIONS
@@ -12,38 +22,96 @@ unset OPTIONS
 while true
 do
 	case "$1" in
-		-f | --file)
-			echo file is "$2"
-			shift; shift
-			;;
 		-e | --file-extension)
-			echo extension is "$2"
+			FILE_EXT=$2
 			shift; shift
 			;;
 		-m | --mode)
-			echo mode is "$2"
+			MODE="$2"
 			shift; shift
 			;;
 		-C | --config)
-			echo config is "$2"
+			CONFIG="$2"
 			shift; shift
 			;;
 		-c | --compiler-flags)
-			echo flags are "$2"
+			COMPILER_FLAGS="$2"
 			shift; shift
 			;;
 		-h | --help)
-			echo help
-			break
+			usage
+			;;
+		-a | --args)
+			ARGS="$2"
+			shift; shift
 			;;
 		--)
 			break
 			;;
 		*)
-			echo Error! Unknown flag. See help for valid flags
-			break
 			;;
 	esac
 done
 
-echo done
+shift
+
+if [[ -r $1 ]]
+then
+	FILE=$1
+else
+	echo "File is either unreadable or does not exist!!"
+	usage
+fi
+
+FILENOEXTENSION=${FILE%.*}
+
+if [[ -z $FILE_EXT ]] # If extension not given, use sed to set it
+then
+	FILE_EXT=${FILE##*.}
+fi
+
+if [[ -r $CONFIG ]] # if config file is passed
+then
+	if ! [[ -z $MODE ]]  # if mode is given
+	then
+		if ! [[ $(grep -io "^\["$FILE_EXT"\:"$MODE"\]" $CONFIG) ]]
+		then
+			echo "No such mode or configuration exists for this filetype!"
+			exit 1
+		fi
+		
+		TMP=$(grep -iA2 "^\["$FILE_EXT"\:"$MODE"\]" $CONFIG | grep -Poi "(?<=compiler-flags=).*")
+		COMPILER_FLAGS=${TMP:-$COMPILER_FLAGS}
+		
+		TMP=$(grep -iA2 "^\["$FILE_EXT"\:"$MODE"\]" $CONFIG | grep -Poi "(?<=args=).*")
+		ARGS=${TMP:-$ARGS}
+
+	else  # if mode is not given
+		if ! [[ $(grep -io "^\["$FILE_EXT"\]" $CONFIG) ]]
+		then
+			echo "No configuration exists for this filetype!"
+			exit 1
+		fi
+		
+		TMP=$(grep -iA2 "^\["$FILE_EXT"\]" $CONFIG | grep -Poi "(?<=compiler-flags=).*")
+		COMPILER_FLAGS=${TMP:-$COMPILER_FLAGS}
+		
+		TMP=$(grep -iA2 "^\["$FILE_EXT"\]" $CONFIG | grep -Poi "(?<=args=).*")
+		ARGS=${TMP:-$ARGS}
+	fi	
+fi
+
+case $FILE_EXT in
+	c | C)
+		echo $COMPILER_FLAGS
+
+		OUT_NAME=$(grep -Po "\-o[A-Za-z0-9\ ]*" <<< $COMPILER_FLAGS | sed s/-o\ *//)
+		#OUT_NAME=${OUT_NAME:-$FILENOEXTENSION}
+		if gcc $COMPILER_FLAGS $FILE
+		then
+			./"$OUT_NAME" "$ARGS"
+		fi
+		;;	
+	*)
+		;;
+esac
