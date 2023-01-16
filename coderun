@@ -113,6 +113,15 @@ case $FILE_EXT in
 			"$OUT_NAME" $ARGS
 		fi
 		;;
+	cpp | CPP)
+		OUT_NAME=$(grep -Po "\-o\s*[A-Za-z0-9/]+" <<< $COMPILER_FLAGS | sed s/-o\ *//)
+		OUT_NAME=${OUT_NAME:-"./a.out"}  # For getting the name of the output file g++ generates
+		
+		if g++ $COMPILER_FLAGS $FILE
+		then
+			"$OUT_NAME" $ARGS
+		fi
+		;;
 	java | JAVA)  # For Java
 		if javac $COMPILER_FLAGS $FILE
 		then
