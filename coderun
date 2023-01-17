@@ -75,8 +75,6 @@ then
 	FILE_EXT=${FILE##*.}
 fi
 
-echo $CONFIG
-
 if [[ -r $CONFIG ]] # if config file is passed
 then
 	if ! [[ -z $MODE ]]  # if mode is given
