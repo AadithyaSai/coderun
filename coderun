@@ -4,7 +4,7 @@
 
 usage()
 {
-	echo "Usage: coderun [options] FILE"
+	echo "Usage: coderun FILE [options]"
 	exit 2
 }
 
@@ -18,6 +18,11 @@ fi
 
 eval set -- "$OPTIONS" # sets args as OPTIONS
 unset OPTIONS
+
+if ! [[ -f ${CONFIG:="$HOME/.coderun.cfg"} ]]
+then
+	unset CONFIG
+fi
 
 while true
 do
@@ -70,6 +75,8 @@ then
 	FILE_EXT=${FILE##*.}
 fi
 
+echo $CONFIG
+
 if [[ -r $CONFIG ]] # if config file is passed
 then
 	if ! [[ -z $MODE ]]  # if mode is given
@@ -81,10 +88,10 @@ then
 		fi
 		
 		TMP=$(grep -iA2 "^\["$FILE_EXT"\:"$MODE"\]" $CONFIG | grep -Poi "(?<=compiler-flags=).*")
-		COMPILER_FLAGS=${TMP:-$COMPILER_FLAGS}
+		COMPILER_FLAGS=${COMPILER_FLAGS:-$TMP}
 		
 		TMP=$(grep -iA2 "^\["$FILE_EXT"\:"$MODE"\]" $CONFIG | grep -Poi "(?<=args=).*")
-		ARGS=${TMP:-$ARGS}
+		ARGS=${ARGS:-$TMP}
 
 	else  # if mode is not given
 		if ! [[ $(grep -io "^\["$FILE_EXT"\]" $CONFIG) ]]
@@ -94,10 +101,10 @@ then
 		fi
 		
 		TMP=$(grep -iA2 "^\["$FILE_EXT"\]" $CONFIG | grep -Poi "(?<=compiler-flags=).*")
-		COMPILER_FLAGS=${TMP:-$COMPILER_FLAGS}
+		COMPILER_FLAGS=${COMPILER_FLAGS:-$TMP}
 		
 		TMP=$(grep -iA2 "^\["$FILE_EXT"\]" $CONFIG | grep -Poi "(?<=args=).*")
-		ARGS=${TMP:-$ARGS}
+		ARGS=${ARGS:-$TMP}
 	fi	
 fi
 
