@@ -7,7 +7,7 @@ Simply clone the repository, and optionally add it to PATH
 # Documentation
 
 ## Usage
-`coderun [OPTIONS] FILE`
+`coderun FILE [OPTIONS]`
 
 ## Parameters
 | Parameters | Description |
@@ -19,10 +19,11 @@ Simply clone the repository, and optionally add it to PATH
 | `-m`, `--mode` | Used to specify the mode |
 | `-h`, `--help` | Displays help |
 
-**Note:** Use of `-C/--config` overrides any compiler flags or arguments passed
+**Note:** Values from `-C/--config` are overriden by any compiler flags or arguments passed
 
 ## Config Files
-Coderun config files are of the format
+By default, the script checks `$HOME/.coderun.cfg`. 
+#### Format
 ```
 [FILETYPE]
 compiler-flags=val1
@@ -56,6 +57,9 @@ args=
 
 #### With a config file
 `coderun -C coderun.cfg hello_world.cpp`
+
+#### With mode
+`coderun -m strict hello_world.cpp`
 
 # License
 coderun is released under Apache 2.0 License
